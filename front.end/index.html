@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="favicon.ico">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>مرحباً — معينك</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* زر المساعد الذكي */
+    .ai-assistant-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    
+    .ai-assistant-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+    
+    .ai-assistant-btn.listening {
+      animation: pulse 1.5s infinite;
+      background: linear-gradient(135deg, #FF5252, #D32F2F);
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    /* نافذة المساعد */
+    .ai-window {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 320px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      padding: 15px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      z-index: 1000;
+      font-family: 'Tajawal', sans-serif;
+    }
+    
+    .ai-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .ai-title {
+      font-weight: 700;
+      color: #2E7D32;
+      margin: 0;
+      font-size: 18px;
+    }
+    
+    .ai-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #777;
+    }
+    
+    .ai-message {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      min-height: 60px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .ai-controls {
+      display: flex;
+      gap: 10px;
+      flex-direction: column;
+    }
+    
+    .ai-btn {
+      padding: 12px;
+      border: none;
+      border-radius: 20px;
+      font-family: 'Tajawal', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+    
+    .ai-btn.primary {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .ai-btn.secondary {
+      background: #f1f1f1;
+      color: #333;
+    }
+    
+    .ai-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    /* إشعار صوتي للمكفوفين */
+    .audio-notification {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #2196F3;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+      z-index: 1001;
+    }
+
+    /* تحسينات للوصول */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>
+<body class="app-bg">
+
+  <!-- إشعار صوتي -->
+  <div class="audio-notification" id="audioNotification">
+    🔊 المساعد الصوتي جاهز
+  </div>
+
+  <!-- نص مخفي للمكفوفين -->
+  <div class="sr-only">
+    تطبيق معينك - نظام الطوارئ لذوي الإعاقة. زر المساعد الصوتي في الزاوية اليسرى السفلية.
+  </div>
+
+  <main class="phone">
+    <div id="splash">
+      <img src="logo.png" alt="معينك" class="splash-logo">
+    </div>
+    
+    <header class="statusbar">◦◦ 🔋<span class="status-icons">9:41</span></header>
+
+    <div class="content welcome">
+      <a href="welcome.html">
+        <img src="logo.png" alt="معينك" class="logo-img">
+      </a>
+
+      <h1 class="big-title">مرحباً بك في<br>مُعينك</h1>
+
+      <a class="pill-btn primary" href="login.html">ابدأ</a>
+    </div>
+
+    <!-- زر المساعد الذكي -->
+    <button class="ai-assistant-btn" onclick="openAIAssistant()" aria-label="فتح المساعد الذكي">
+      🤖
+    </button>
+    
+    <!-- نافذة المساعد -->
+    <div class="ai-window" id="aiWindow">
+      <div class="ai-header">
+        <h3 class="ai-title">المساعد الذكي - معينك</h3>
+        <button class="ai-close" onclick="closeAI()" aria-label="إغلاق النافذة">✖</button>
+      </div>
+      
+      <div class="ai-message" id="aiMessage">
+        🎯 مرحباً! أنا مساعدك الذكي. يمكنني:
+        <br>• توجيهك للخدمات المناسبة
+        <br>• قراءة محتوى الصفحات
+        <br>• المساعدة في الطوارئ
+        <br>• التفاعل باللغة العربية
+      </div>
+      
+      <div class="ai-controls">
+        <button class="ai-btn primary" onclick="startArabicListening()">
+          🎤 تحدث بالعربية
+        </button>
+        <button class="ai-btn secondary" onclick="showArabicCommands()">
+          📋 الأوامر المتاحة
+        </button>
+        <button class="ai-btn secondary" onclick="readPageContent()">
+          📖 اقرأ هذه الصفحة
+        </button>
+        <button class="ai-btn secondary" onclick="testEmergency()">
+          🚨 تجربة الطوارئ
+        </button>
+        <button class="ai-btn secondary" onclick="navigateToService('emergency')">
+          🏥 الذهاب للطوارئ
+        </button>
+      </div>
+    </div>
+
+  </main>
+  
+  <script src="javascript.js"></script>
+  <script>
+    // حالة الاستماع
+    let isListening = false;
+    let currentAction = null;
+
+    // إشعار صوتي عند فتح الصفحة (للمكفوفين)
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        speakArabic("مرحباً بك في تطبيق معينك. المساعد الصوتي متاح بالضغط على الزر الأخضر في الزاوية اليمنى السفلية");
+        showNotification("المساعد الصوتي جاهز للاستخدام");
+        
+        // إرشادات إضافية بعد 5 ثواني
+        setTimeout(() => {
+          speakArabic("يمكنك قول: طوارئ، وثائق، أين أنا، أو مساعدة للحصول على المساعدة");
+        }, 5000);
+      }, 1000);
+    });
+
+    function showNotification(message) {
+      const notification = document.getElementById('audioNotification');
+      notification.textContent = message;
+      notification.style.display = 'block';
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 3000);
+    }
+
+    // دالة فتح نافذة المساعد
+    function openAIAssistant() {
+      document.getElementById('aiWindow').style.display = 'block';
+      speakArabic("مرحباً، أنا مساعدك الذكي معينك. كيف يمكنني مساعدتك اليوم؟");
+    }
+    
+    // دالة إغلاق النافذة
+    function closeAI() {
+      document.getElementById('aiWindow').style.display = 'none';
+      speakArabic("إلى اللقاء، أنا هنا إذا احتجتني");
+    }
+    
+    // دالة بدء الاستماع بالعربية
+    async function startArabicListening() {
+      if (isListening) return;
+      
+      try {
+        isListening = true;
+        const aiButton = document.querySelector('.ai-assistant-btn');
+        aiButton.classList.add('listening');
+        
+        document.getElementById('aiMessage').textContent = "🎙️ أستمع إليك... تحدث الآن بالعربية";
+        speakArabic("أستمع إليك، تفضل بالتحدث باللغة العربية");
+        
+        // محاكاة الاستماع (4 ثواني)
+        setTimeout(() => {
+          const userCommand = simulateVoiceRecognition();
+          processArabicCommand(userCommand);
+          aiButton.classList.remove('listening');
+          isListening = false;
+        }, 4000);
+        
+      } catch (error) {
+        document.getElementById('aiMessage').textContent = "❌ خطأ في الميكروفون";
+        speakArabic("عذراً، حدث خطأ في الميكروفون. جرب زر الأوامر النصية");
+        isListening = false;
+      }
+    }
+    
+    // محاكاة التعرف على الصوت
+    function simulateVoiceRecognition() {
+      const commands = [
+        "طوارئ",
+        "اسعاف",
+        "وثائق",
+        "هوية",
+        "أين أنا",
+        "مساعدة",
+        "خدمات",
+        "توجيه"
+      ];
+      
+      return commands[Math.floor(Math.random() * commands.length)];
+    }
+    
+    // معالجة الأوامر العربية
+    function processArabicCommand(command) {
+      let response = "";
+      let action = null;
+      
+      switch (command) {
+        case "طوارئ":
+        case "اسعاف":
+          response = "🚑 فهمت أنك تطلب الطوارئ. أتوجه بك إلى خدمات الإسعاف الفورية";
+          action = "emergency";
+          break;
+        case "وثائق":
+        case "هوية":
+          response = "📄 توجيهك إلى خدمات تجديد الوثائق والهوية";
+          action = "documents";
+          break;
+        case "أين أنا":
+          response = "📍 أنت في الصفحة الرئيسية لتطبيق معينك. يمكنك طلب الطوارئ، تجديد الوثائق، أو الاستعلامات";
+          action = "location";
+          break;
+        case "مساعدة":
+          response = "🤝 كيف يمكنني مساعدتك؟ أتريد الطوارئ، المساعدة في التنقل، أو الاستفسار عن خدمة؟";
+          action = "help";
+          break;
+        case "خدمات":
+          response = "📋 خدماتنا المتاحة: الطوارئ الطبية، تجديد الوثائق، الدعم الفني، الاستعلامات";
+          action = "services";
+          break;
+        case "توجيه":
+          response = "🧭 يمكنني توجيهك إلى: الطوارئ، الوثائق، أو صفحة المساعدة";
+          action = "navigation";
+          break;
+        default:
+          response = "🎯 لم أفهم الطلب. جرب: طوارئ، وثائق، أين أنا، أو مساعدة";
+          action = "unknown";
+      }
+      
+      document.getElementById('aiMessage').textContent = response;
+      speakArabic(response);
+      
+      // تنفيذ الإجراء بعد الرد
+      if (action) {
+        setTimeout(() => executeAction(action), 2000);
+      }
+    }
+    
+    // تنفيذ الإجراء المناسب
+    function executeAction(action) {
+      switch (action) {
+        case "emergency":
+          speakArabic("جارٍ نقلك إلى صفحة الطوارئ...");
+          navigateToService("emergency");
+          break;
+        case "documents":
+          speakArabic("جارٍ فتح صفحة الوثائق...");
+          navigateToService("documents");
+          break;
+        case "location":
+          speakArabic("أنت حالياً في الصفحة الرئيسية لتطبيق معينك.");
+          break;
+        case "help":
+          speakArabic("يمكنني مساعدتك في الطوارئ، الوثائق، أو الخدمات الأخرى.");
+          break;
+        case "services":
+          speakArabic("الخدمات المتاحة: الطوارئ الطبية، تجديد الوثائق، الدعم الفني، الاستعلامات.");
+          break;
+        case "navigation":
+          speakArabic("تفضل باختيار: الطوارئ، الوثائق، أو المساعدة.");
+          break;
+        default:
+          speakArabic("عذراً، لم أفهم طلبك.");
+      }
+    }
+
+    // دالة التوجيه إلى صفحات الخدمة
+    function navigateToService(service) {
+      switch (service) {
+        case "emergency":
+          window.location.href = "emergency.html";
+          break;
+        case "documents":
+          window.location.href = "documents.html";
+          break;
+        default:
+          console.log("الخدمة غير معروفة:", service);
+      }
+    }
+
+    // دالة اختبار الطوارئ
+    function testEmergency() {
+      document.getElementById('aiMessage').textContent = "🚨 هذا اختبار لطوارئ وهمية. لا يوجد خطر حقيقي.";
+      speakArabic("هذا مجرد اختبار للطوارئ. لا يوجد خطر حقيقي.");
+    }
+
+    // دالة عرض الأوامر المتاحة
+    function showArabicCommands() {
+      const commands = "الأوامر المتاحة: طوارئ، اسعاف، وثائق، هوية، أين أنا، مساعدة، خدمات، توجيه.";
+      document.getElementById('aiMessage').textContent = commands;
+      speakArabic(commands);
+    }
+
+    // دالة قراءة محتوى الصفحة
+    function readPageContent() {
+      const text = document.body.innerText;
+      document.getElementById('aiMessage').textContent = "📖 جاري قراءة محتوى الصفحة...";
+      speakArabic(text);
+    }
+
+    // دالة محاكاة النطق بالعربية
+    function speakArabic(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "ar-SA"; 
+        speechSynthesis.speak(utterance);
+      } else {
+        console.log("النطق غير مدعوم في هذا المتصفح.");
+      }
+    }
+  </script>
+</body>
+</html>
